@@ -40,8 +40,8 @@ python3 -m venv .venv
 
 ## Полный индекс документации
 
-- [---](.github/ISSUE_TEMPLATE/bug_report.md)
-- [Изменение](.github/PULL_REQUEST_TEMPLATE.md)
+- [Шаблон сообщения об ошибке](.github/ISSUE_TEMPLATE/bug_report.md)
+- [Шаблон PR](.github/PULL_REQUEST_TEMPLATE.md)
 - [Инструкции для последующих циклов разработки](AGENTS.md)
 - [Архитектура локального аудитора](ARCHITECTURE.md)
 - [История изменений](CHANGELOG.md)
