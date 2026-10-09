@@ -1,4 +1,4 @@
-"""Reviewed Actions release control; never creates/moves tags or overwrites assets."""
+"""Контроль выпуска через Actions: теги и существующие артефакты не перезаписываются."""
 import argparse
 from datetime import datetime, timezone
 import gzip
@@ -14,15 +14,21 @@ import tomllib
 import zipfile
 
 REPOSITORY = 'mejustbox-byte/azure-opsec-auditor'
-ASSETS = ('azure_opsec_auditor-0.1.0a1-py3-none-any.whl',
-          'azure_opsec_auditor-0.1.0a1.tar.gz', 'examples.zip', 'documentation.zip', 'SHA256SUMS')
+def asset_names(version):
+    if not re.fullmatch(r'\d+\.\d+\.\d+a\d+', version, re.ASCII):
+        raise ValueError('Недопустимая версия alpha-пакета')
+    return (f'azure_opsec_auditor-{version}-py3-none-any.whl',
+            f'azure_opsec_auditor-{version}.tar.gz', 'examples.zip', 'documentation.zip', 'SHA256SUMS')
+
+
+ASSETS = asset_names('0.1.0a2')
 
 
 def validate_request(tag, commit):
     if not re.fullmatch(r'v\d+\.\d+\.\d+a\d+', tag, re.ASCII):
-        raise ValueError('Only explicit alpha version tags are supported')
+        raise ValueError('Поддерживаются только явно указанные теги alpha-версий')
     if not re.fullmatch(r'[0-9a-f]{40}', commit, re.ASCII):
-        raise ValueError('Expected commit must be a full lowercase SHA')
+        raise ValueError('Ожидаемый commit должен быть полным SHA в нижнем регистре')
 
 
 def command(args, cwd=None):
@@ -33,23 +39,26 @@ def command(args, cwd=None):
 def verify_local(source, tag, expected):
     validate_request(tag, expected)
     if command(['git', 'rev-parse', '--verify', 'HEAD^{commit}'], source) != expected:
-        raise ValueError('Checkout HEAD differs from approved release commit')
+        raise ValueError('HEAD checkout отличается от утверждённого commit выпуска')
     if command(['git', 'rev-parse', '--verify', f'refs/tags/{tag}^{{commit}}'], source) != expected:
-        raise ValueError('Existing tag differs from approved release commit')
+        raise ValueError('Существующий tag отличается от утверждённого commit выпуска')
     command(['git', 'merge-base', '--is-ancestor', expected, 'origin/main'], source)
     command(['git', 'diff', '--exit-code', expected, '--'], source)
     command(['git', 'diff', '--cached', '--exit-code', expected, '--'], source)
     version = tomllib.loads((source / 'pyproject.toml').read_text())['project']['version']
-    if tag != 'v' + version or version != '0.1.0a1':
-        raise ValueError('Tag/package version mismatch; this workflow releases 0.1.0a1 only')
+    if tag != 'v' + version:
+        raise ValueError('Версия пакета не соответствует тегу')
+    asset_names(version)
+    return version
 
 
-def normalize_archives(dist, epoch):
-    """Normalize container metadata only; content/checksums inside wheel are intact."""
+def normalize_archives(dist, epoch, version='0.1.0a2'):
+    """Нормализуются только метаданные контейнера; содержимое wheel не меняется."""
+    assets = asset_names(version)
     moment = datetime.fromtimestamp(epoch, timezone.utc)
     if not 1980 <= moment.year <= 2107:
-        raise ValueError('Epoch outside ZIP timestamp range')
-    wheel = dist / ASSETS[0]
+        raise ValueError('Время вне диапазона timestamps ZIP')
+    wheel = dist / assets[0]
     with zipfile.ZipFile(wheel) as source:
         entries = [(name, source.read(name)) for name in sorted(source.namelist())]
     with tempfile.NamedTemporaryFile(dir=dist, delete=False) as temp:
@@ -66,12 +75,12 @@ def normalize_archives(dist, epoch):
         temporary.replace(wheel)
     finally:
         temporary.unlink(missing_ok=True)
-    sdist = dist / ASSETS[1]
+    sdist = dist / assets[1]
     archive = io.BytesIO()
     with tarfile.open(sdist, 'r:gz') as source, tarfile.open(fileobj=archive, mode='w', format=tarfile.PAX_FORMAT) as output:
         for member in sorted(source.getmembers(), key=lambda m: m.name):
             if not (member.isfile() or member.isdir()):
-                raise ValueError('Unsupported special member in source distribution')
+                raise ValueError('Недопустимый специальный элемент sdist')
             entry = tarfile.TarInfo(member.name)
             entry.type = tarfile.DIRTYPE if member.isdir() else tarfile.REGTYPE
             entry.mode = 0o755 if member.isdir() else 0o644
@@ -94,60 +103,62 @@ def verify_remote_tag(tag, expected):
     for _ in range(5):
         if ref['type'] == 'commit':
             if ref['sha'] != expected:
-                raise ValueError('Remote tag changed or differs from approved commit')
+                raise ValueError('Удалённый tag изменён или отличается от утверждённого commit')
             return
         if ref['type'] != 'tag' or not re.fullmatch(r'[0-9a-f]{40}', ref['sha']):
-            raise ValueError('Unexpected tag object')
+            raise ValueError('Неожиданный объект tag')
         ref = json.loads(gh('api', f'repos/{REPOSITORY}/git/tags/{ref["sha"]}'))['object']
-    raise ValueError('Too many annotated tag indirections')
+    raise ValueError('Слишком много переходов annotated tag')
 
 
-def verify_downloads(dist, downloaded):
-    for name in ASSETS:
+def verify_downloads(dist, downloaded, version='0.1.0a2'):
+    assets = asset_names(version)
+    for name in assets:
         if not (downloaded / name).is_file() or (downloaded / name).read_bytes() != (dist / name).read_bytes():
-            raise ValueError('Downloaded release asset differs from verified build: ' + name)
+            raise ValueError('Скачанный артефакт отличается от проверенной сборки: ' + name)
     lines = (downloaded / 'SHA256SUMS').read_text().splitlines()
     if len(lines) != 4:
-        raise ValueError('Unexpected checksum manifest')
-    expected_names = set(ASSETS) - {'SHA256SUMS'}
+        raise ValueError('Неожиданный manifest контрольных сумм')
+    expected_names = set(assets) - {'SHA256SUMS'}
     actual_names = set()
     for line in lines:
         digest, name = line.split('  ', 1)
         if name not in expected_names or name in actual_names:
-            raise ValueError('Unexpected/duplicate checksum member')
+            raise ValueError('Неожиданный/повторный элемент контрольных сумм')
         if hashlib.sha256((downloaded / name).read_bytes()).hexdigest() != digest:
-            raise ValueError('Published checksum mismatch')
+            raise ValueError('Контрольная сумма опубликованного файла не совпала')
         actual_names.add(name)
     if actual_names != expected_names:
-        raise ValueError('Incomplete checksum coverage')
+        raise ValueError('Контрольные суммы не покрывают все артефакты')
 
 
 def publish(source, dist, tag, expected):
-    verify_local(source, tag, expected)
+    version = verify_local(source, tag, expected)
+    assets = asset_names(version)
     verify_remote_tag(tag, expected)
     release = json.loads(gh('release', 'view', tag, '--repo', REPOSITORY,
                             '--json', 'isDraft,isPrerelease,assets,targetCommitish,url'))
     if not release['isPrerelease'] or release['targetCommitish'] != expected:
-        raise ValueError('Existing release target or prerelease state differs; refusing modification')
+        raise ValueError('Target или prerelease состояние отличаются; изменение отклонено')
     names = [a['name'] for a in release['assets']]
-    if len(names) != len(set(names)) or set(names) - set(ASSETS):
-        raise ValueError('Unexpected existing release assets; no assets will be overwritten')
+    if len(names) != len(set(names)) or set(names) - set(assets):
+        raise ValueError('Неожиданные существующие assets; перезапись отклонена')
     # Reproducible containers let retries compare existing assets before uploading.
     if names:
         with tempfile.TemporaryDirectory(prefix='release-existing-') as temp:
             gh('release', 'download', tag, '--repo', REPOSITORY, '--dir', temp)
             for name in names:
                 if (Path(temp) / name).read_bytes() != (dist / name).read_bytes():
-                    raise ValueError('Existing asset differs; refusing overwrite: ' + name)
-    missing = [name for name in ASSETS if name not in names]
+                    raise ValueError('Существующий артефакт отличается; перезапись отклонена: ' + name)
+    missing = [name for name in assets if name not in names]
     if missing and not release['isDraft']:
-        raise ValueError('Published release has incomplete assets; refusing modification')
+        raise ValueError('Опубликованный выпуск неполон; изменение отклонено')
     for name in missing:
         gh('release', 'upload', tag, str(dist / name), '--repo', REPOSITORY)
     # Download and validate ALL assets before publication, then again afterwards.
     with tempfile.TemporaryDirectory(prefix='release-before-publish-') as temp:
         gh('release', 'download', tag, '--repo', REPOSITORY, '--dir', temp)
-        verify_downloads(dist, Path(temp))
+        verify_downloads(dist, Path(temp), version)
     verify_remote_tag(tag, expected)
     if release['isDraft']:
         # Preserve the existing draft body with its exact audited CI/lab outcomes.
@@ -155,20 +166,20 @@ def publish(source, dist, tag, expected):
     published = json.loads(gh('release', 'view', tag, '--repo', REPOSITORY,
                               '--json', 'isDraft,isPrerelease,assets,targetCommitish,url'))
     if published['isDraft'] or not published['isPrerelease'] or published['targetCommitish'] != expected:
-        raise ValueError('Publication state/target verification failed')
-    if {a['name'] for a in published['assets']} != set(ASSETS) or len(published['assets']) != len(ASSETS):
-        raise ValueError('Published asset inventory mismatch')
+        raise ValueError('Проверка состояния/target публикации не пройдена')
+    if {a['name'] for a in published['assets']} != set(assets) or len(published['assets']) != len(assets):
+        raise ValueError('Inventory опубликованных assets не совпал')
     with tempfile.TemporaryDirectory(prefix='release-published-') as temp:
         gh('release', 'download', tag, '--repo', REPOSITORY, '--dir', temp)
-        verify_downloads(dist, Path(temp))
+        verify_downloads(dist, Path(temp), version)
     verify_remote_tag(tag, expected)
-    print('Verified published prerelease, immutable tag, five assets and all SHA256:', published['url'])
+    print('Проверены опубликованный prerelease, неизменный tag, пять assets и все SHA256:', published['url'])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('operation', choices=('validate-input', 'validate-source', 'normalize', 'publish'))
-    parser.add_argument('--tag', default='v0.1.0a1')
+    parser.add_argument('--tag', default='v0.1.0a2')
     parser.add_argument('--expected-commit', required=True)
     parser.add_argument('--source', type=Path)
     parser.add_argument('--dist', type=Path)
@@ -177,15 +188,15 @@ def main():
     if args.operation == 'validate-input':
         return
     if args.source is None:
-        parser.error('--source is required')
-    verify_local(args.source, args.tag, args.expected_commit)
+        parser.error('Требуется --source')
+    version = verify_local(args.source, args.tag, args.expected_commit)
     if args.operation == 'validate-source':
         return
     if args.dist is None:
-        parser.error('--dist is required')
+        parser.error('Требуется --dist')
     if args.operation == 'normalize':
         epoch = int(command(['git', 'show', '-s', '--format=%ct', args.expected_commit], args.source))
-        normalize_archives(args.dist, epoch)
+        normalize_archives(args.dist, epoch, version)
     else:
         publish(args.source, args.dist, args.tag, args.expected_commit)
 

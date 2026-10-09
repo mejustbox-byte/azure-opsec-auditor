@@ -1,22 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mejustbox-byte/azure-opsec-auditor/blob/main/schemas/snapshot-v1.json",
-  "title": "Normalized offline snapshot v1",
+  "title": "Нормализованный локальный снимок v1",
   "type": "object",
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 1,
+      "description": "Версия входного контракта; поддерживается только 1."
     },
     "synthetic": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "true для синтетического примера; false не доказывает реальную платформенную проверку."
     },
     "scope": {
       "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+      "description": "Псевдоним области снимка без реальных tenant identifiers."
     },
     "collected_at": {
       "type": "string",
+      "description": "Самое раннее время включённых наблюдений в UTC.",
       "format": "date-time",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
     },
@@ -33,15 +37,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -50,7 +57,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "privileged": {
                     "anyOf": [
@@ -60,7 +68,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Утверждение о привилегированном доступе сущности."
                   },
                   "assignment": {
                     "anyOf": [
@@ -75,7 +84,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Тип назначения: постоянное, допустимое к активации или активное."
                   },
                   "scope_level": {
                     "anyOf": [
@@ -92,7 +102,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Нормализованный уровень области назначения."
                   }
                 },
                 "required": [
@@ -100,7 +111,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -142,15 +154,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -159,7 +174,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "plane": {
                     "anyOf": [
@@ -173,7 +189,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Плоскость управления PIM: Entra или Azure."
                   },
                   "approval_required": {
                     "anyOf": [
@@ -183,7 +200,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Требуется ли одобрение активации."
                   },
                   "mfa_required": {
                     "anyOf": [
@@ -193,7 +211,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Требуется ли MFA при активации."
                   },
                   "max_activation_hours": {
                     "anyOf": [
@@ -205,7 +224,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Максимальная длительность активации в часах."
                   }
                 },
                 "required": [
@@ -213,7 +233,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -255,15 +276,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -272,7 +296,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "state": {
                     "anyOf": [
@@ -287,7 +312,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Состояние политики CA; report_only не означает применение."
                   },
                   "privileged_target_included": {
                     "anyOf": [
@@ -297,7 +323,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Включена ли нормализованная привилегированная цель."
                   },
                   "privileged_target_excluded": {
                     "anyOf": [
@@ -307,7 +334,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Исключена ли нормализованная привилегированная цель."
                   }
                 },
                 "required": [
@@ -315,7 +343,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -357,15 +386,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -374,7 +406,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "privileged_target": {
                     "anyOf": [
@@ -384,7 +417,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Является ли цель привилегированной."
                   },
                   "strength": {
                     "anyOf": [
@@ -399,7 +433,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Нормализованная требуемая сила аутентификации."
                   },
                   "enforced": {
                     "anyOf": [
@@ -409,7 +444,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Утверждение о применении требования; реальные сессии не проверяются."
                   }
                 },
                 "required": [
@@ -417,7 +453,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -459,15 +496,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -476,7 +516,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "privileged": {
                     "anyOf": [
@@ -486,7 +527,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Утверждение о привилегированном доступе сущности."
                   },
                   "owner_count": {
                     "anyOf": [
@@ -498,7 +540,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Число ответственных владельцев сущности."
                   },
                   "credential_expired": {
                     "anyOf": [
@@ -508,7 +551,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Есть ли истёкшие учётные данные по метаданным без чтения значений."
                   }
                 },
                 "required": [
@@ -516,7 +560,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -558,15 +603,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -575,7 +623,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "grant_type": {
                     "anyOf": [
@@ -589,7 +638,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Тип OAuth grant: application или delegated."
                   },
                   "permissions": {
                     "anyOf": [
@@ -605,7 +655,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Разрешённые имена permissions, нормализованные оператором."
                   }
                 },
                 "required": [
@@ -613,7 +664,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -655,15 +707,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -672,7 +727,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "kind": {
                     "anyOf": [
@@ -686,7 +742,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Тип identity: managed или federated."
                   },
                   "broad_privilege": {
                     "anyOf": [
@@ -696,7 +753,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Есть ли широкие привилегии identity."
                   },
                   "issuer_trusted": {
                     "anyOf": [
@@ -706,7 +764,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Утверждение оператора о доверии issuer."
                   },
                   "subject_exact": {
                     "anyOf": [
@@ -716,7 +775,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Утверждение о точном соответствии subject."
                   },
                   "audience_expected": {
                     "anyOf": [
@@ -726,7 +786,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Соответствует ли audience ожидаемой."
                   }
                 },
                 "required": [
@@ -734,7 +795,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -776,15 +838,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -793,7 +858,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "public_network_access": {
                     "anyOf": [
@@ -803,7 +869,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Разрешён ли публичный сетевой доступ."
                   },
                   "default_action": {
                     "anyOf": [
@@ -817,7 +884,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Сетевое действие по умолчанию: allow или deny."
                   },
                   "soft_delete": {
                     "anyOf": [
@@ -827,7 +895,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Включено ли обратимое удаление."
                   },
                   "purge_protection": {
                     "anyOf": [
@@ -837,7 +906,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Включена ли защита окончательного удаления."
                   }
                 },
                 "required": [
@@ -845,7 +915,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -887,15 +958,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -904,7 +978,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "allow_blob_public_access": {
                     "anyOf": [
@@ -914,7 +989,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Разрешает ли account анонимный доступ к blob."
                   },
                   "container_access": {
                     "anyOf": [
@@ -929,7 +1005,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Настроенный уровень анонимного доступа контейнера."
                   }
                 },
                 "required": [
@@ -937,7 +1014,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -979,15 +1057,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -996,7 +1077,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "direction": {
                     "anyOf": [
@@ -1010,7 +1092,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Направление сетевого правила."
                   },
                   "action": {
                     "anyOf": [
@@ -1024,7 +1107,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Действие сетевого правила."
                   },
                   "any_source": {
                     "anyOf": [
@@ -1034,7 +1118,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Допускается ли любой источник."
                   },
                   "ports": {
                     "anyOf": [
@@ -1051,7 +1136,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Список нормализованных портов; 0 означает все порты."
                   }
                 },
                 "required": [
@@ -1059,7 +1145,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -1101,15 +1188,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -1118,7 +1208,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "enabled": {
                     "anyOf": [
@@ -1128,7 +1219,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Включено ли журналирование."
                   },
                   "destination_configured": {
                     "anyOf": [
@@ -1138,7 +1230,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Настроено ли назначение журналов; доставка не подтверждается."
                   },
                   "retention_days": {
                     "anyOf": [
@@ -1150,7 +1243,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Срок хранения журналов в днях."
                   }
                 },
                 "required": [
@@ -1158,7 +1252,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [
@@ -1200,15 +1295,18 @@
                 "partial",
                 "unavailable",
                 "not_run"
-              ]
+              ],
+              "description": "Статус сбора; complete утверждает оператор, независимой проверки нет."
             },
             "source": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Псевдоним источника нормализации."
             },
             "api_version": {
               "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+              "description": "Версия API или синтетической нормализации."
             },
             "records": {
               "type": "array",
@@ -1217,7 +1315,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$"
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$",
+                    "description": "Уникальный внутри раздела псевдоним записи; без реальных идентификаторов."
                   },
                   "policy_configured": {
                     "anyOf": [
@@ -1227,7 +1326,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Настроена ли политика резервного копирования."
                   },
                   "last_backup": {
                     "anyOf": [
@@ -1242,7 +1342,8 @@
                       {
                         "type": "null"
                       }
-                    ]
+                    ],
+                    "description": "Последний статус копирования; фактический restore не подтверждается."
                   }
                 },
                 "required": [
@@ -1250,7 +1351,8 @@
                 ],
                 "additionalProperties": false
               },
-              "maxItems": 1000
+              "maxItems": 1000,
+              "description": "Не более 1000 записей; unavailable/not_run требуют пустого списка."
             }
           },
           "required": [

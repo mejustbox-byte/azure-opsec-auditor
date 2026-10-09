@@ -1,20 +1,20 @@
-# Implemented rule matrix v1
+# Матрица реализованных правил v1
 
-All rules are tested on synthetic normalized metadata. Azure/Entra live behavior: **NOT VERIFIED**. Each listed field is required for a verdict; absent/null gives unknown. All thresholds are documented MVP baselines, not claims of Microsoft compliance. Severity describes the risk when present; a pass/unknown finding retains the rule's potential severity.
+Правила проверены на синтетических нормализованных метаданных. Реальные Azure/Entra: **НЕ ПРОВЕРЕНО**. Все перечисленные поля обязательны для результата; отсутствие/null даёт `unknown`. Пороги — явно выбранные базовые значения MVP, а не утверждение о соответствии Microsoft. Severity описывает потенциальный риск правила и сохраняется также при pass/unknown.
 
-| Rule / section | Normalized fields | Fail predicate | Limitation |
+| Правило / раздел | Нормализованные поля | Условие fail | Ограничение |
 |---|---|---|---|
-| RBAC-01 / rbac | privileged, assignment, scope_level | privileged + permanent + subscription/management_group/directory | no inheritance/group/custom-role expansion |
-| PIM-01 / pim | plane, approval_required, mfa_required, max_activation_hours | no approval/MFA or duration outside 1–8 hours | configuration only, both planes labeled but not collected |
-| CA-01 / conditional_access | state, privileged_target_included, privileged_target_excluded | not enabled, not included, or excluded | one target-policy assertion, not aggregate coverage |
-| MFA-01 / mfa | privileged_target, strength, enforced | privileged target without enforced phishing_resistant strength | no registration/session verification |
-| SP-01 / service_principals | privileged, owner_count, credential_expired | privileged and no owners or expired credential | no activity or credential values |
-| OAUTH-01 / oauth | grant_type, permissions | application grant includes Directory.ReadWrite.All, RoleManagement.ReadWrite.Directory, AppRoleAssignment.ReadWrite.All, Application.ReadWrite.All or Mail.ReadWrite | limited list; delegated grants and other permissions not assessed for risk by this predicate |
-| OIDC-01 / identities | kind, broad_privilege, issuer_trusted, subject_exact, audience_expected | broad privilege; or federated identity lacks any trust flag | flags asserted by normalizer; managed identities ignore federation flags |
-| KV-01 / key_vault | public_network_access, default_action, soft_delete, purge_protection | public+allow or either deletion safeguard off | no effective RBAC, trusted-service or secret-content checks |
-| ST-01 / storage | allow_blob_public_access, container_access | account permits anonymous access and container is blob/container | account flag alone not a failure; no anonymous request |
-| NET-01 / network | direction, action, any_source, ports | inbound+allow+any source and 0(all),22,3389,1433,3306 or 5432 | no effective priorities, ranges, ASGs, routing or scans |
-| LOG-01 / logging | enabled, destination_configured, retention_days | disabled, no destination or retention <30 days | delivery/tenant-wide coverage unverified |
-| REC-01 / recovery | policy_configured, last_backup | no policy or last status not success | no job timestamp, content or restore verification |
+| RBAC-01 / rbac | privileged, assignment, scope_level | privileged + permanent + subscription/management_group/directory | нет раскрытия групп, наследования, custom roles |
+| PIM-01 / pim | plane, approval_required, mfa_required, max_activation_hours | нет approval/MFA либо длительность вне 1–8 часов | только конфигурация; обе planes обозначены, но не собираются |
+| CA-01 / conditional_access | state, privileged_target_included, privileged_target_excluded | не enabled, target не включён или исключён | одна target-policy запись, не общий охват |
+| MFA-01 / mfa | privileged_target, strength, enforced | privileged target без enforced phishing_resistant strength | регистрация/сессии не проверяются |
+| SP-01 / service_principals | privileged, owner_count, credential_expired | privileged и нет владельцев либо credential истёк | нет activity или credential values |
+| OAUTH-01 / oauth | grant_type, permissions | application grant содержит Directory.ReadWrite.All, RoleManagement.ReadWrite.Directory, AppRoleAssignment.ReadWrite.All, Application.ReadWrite.All или Mail.ReadWrite | ограниченный список; delegated grants и другие permissions не оцениваются этим условием |
+| OIDC-01 / identities | kind, broad_privilege, issuer_trusted, subject_exact, audience_expected | broad privilege либо federated identity без любого trust flag | флаги утверждает normalizer; managed identity игнорирует federation flags |
+| KV-01 / key_vault | public_network_access, default_action, soft_delete, purge_protection | public+allow либо отсутствует защита удаления | нет effective RBAC, trusted services или secret-content |
+| ST-01 / storage | allow_blob_public_access, container_access | account разрешает anonymous и container имеет blob/container access | account flag отдельно недостаточен; нет anonymous request |
+| NET-01 / network | direction, action, any_source, ports | inbound+allow+any source и 0(все),22,3389,1433,3306 или 5432 | нет приоритетов, диапазонов, ASG, маршрутов или сканирования |
+| LOG-01 / logging | enabled, destination_configured, retention_days | выключено, нет destination либо retention <30 дней | доставка и охват tenant не проверены |
+| REC-01 / recovery | policy_configured, last_backup | нет policy либо last status не success | нет времени backup job, содержания или restore |
 
-`schemas/snapshot-v1.json` contains exact enum/type/range constraints. `fixtures/{good,bad,unknown,not_run,mixed}.json` cover the status contract; tests additionally exercise boundary conditions, every missing rule field, stale/partial/unavailable evidence and invalid input.
+Точные enum/types/ranges описаны в `schemas/snapshot-v1.json`. `fixtures/{good,bad,unknown,not_run,mixed}.json` покрывают статусы; тесты дополнительно проверяют границы, каждое отсутствующее поле, stale/partial/unavailable и некорректный ввод.

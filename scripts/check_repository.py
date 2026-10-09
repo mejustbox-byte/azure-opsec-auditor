@@ -30,7 +30,7 @@ def main():
             continue
         data = path.read_bytes()
         if scan_bytes(data):
-            print('Potential credential signature in repository file (value withheld):',relative)
+            print('Возможная сигнатура credentials в файле (значение скрыто):',relative)
             failures += 1
         if path.suffix == '.md':
             for link in re.findall(r'\]\(([^)]+)\)',data.decode('utf-8')):
@@ -38,9 +38,18 @@ def main():
                     continue
                 target = path.parent / link.split('#')[0]
                 if not target.is_file():
-                    print('Broken local documentation link in:',relative)
+                    print('Неработающая локальная ссылка в:',relative)
                     failures += 1
-    print(f'Checked {len(paths)} repository files; {failures} signature/link failures.')
+
+    index = (ROOT / 'README.md').read_text()
+    indexed = set(re.findall(r'\]\(([^)#]+)(?:#[^)]*)?\)', index))
+    documents = [*ROOT.glob('*.md'), *ROOT.glob('docs/**/*.md'), *ROOT.glob('.github/**/*.md')]
+    for document in documents:
+        relative = document.relative_to(ROOT).as_posix()
+        if relative != 'README.md' and relative not in indexed:
+            print('Документ отсутствует в полном README index:', relative)
+            failures += 1
+    print(f'Проверено {len(paths)} файлов; ошибок сигнатур/ссылок/индекса: {failures}.')
     return 1 if failures else 0
 
 

@@ -1,19 +1,23 @@
-# Release procedure
+# Процедура выпуска
 
-Version `0.1.0a1`, Git tag `v0.1.0a1`, prerelease because real platform tests have not run. No PyPI publication or production-readiness claim.
+Python-пакет `0.1.0a2`, Git/тег `v0.1.0a2`; предварительный выпуск, поскольку реальные платформенные проверки не выполнены. PyPI и production readiness не заявляются. Старый `v0.1.0a1` и его артефакты сохраняются.
 
-From a clean checkout run the README development commands. Build with pinned hashed tools and `--no-isolation`. `python scripts/release_assets.py` creates `examples.zip` (synthetic snapshots/schema), `documentation.zip` (README/security/docs) and `SHA256SUMS` alongside wheel/sdist in `dist/`. Attach those five assets; GitHub additionally provides source archives. Verify downloaded assets against the manifest before installation. Checksums prove consistency, not publisher identity; obtain them from the same reviewed release.
+Из чистого checkout выполните команды разработки из README. `python scripts/release_assets.py` создаёт `examples.zip` (синтетические snapshots/schema), `documentation.zip` (русские README/security/contributing/changelog/docs) и `SHA256SUMS` рядом с wheel/sdist в `dist/`. Всего пять assets; GitHub также предоставляет source archives. SHA256 подтверждает согласованность, но не личность издателя; получайте manifest из того же проверенного выпуска.
 
-Create a feature PR, inspect remote CI and merge the reviewed head through GitHub. Do not merge if required CI failed or remains pending. Build release artifacts from the merged commit, tag that exact commit and upload assets. Include supported installation/run commands, rule limits, test results and unperformed Azure/Entra/restore checks in release notes. Inspect release assets/tag/target commit via GitHub API and read-only Git operations. If GitHub operations are unavailable, retain local artifacts and report the blocker; local packaging is not a published release.
+Изменения вносите отдельным PR, проверьте удалённый CI и слейте проверенный HEAD. Соберите из финального main; создайте новый тег ровно на этом commit. Не передвигайте уже существующие tags и не перезаписывайте assets. В русских notes укажите точные local/remote результаты, installation/run и реально невыполненные Azure/Entra/restore проверки. Проверьте tag, опубликованный prerelease и скачанные assets; локальная сборка не равна публикации.
 
-Real laboratory prerequisites and outstanding tests: [lab procedure](05-lab-and-ci.md). The CLI has no collector, so platform validation must use a separately approved collection/normalization procedure before any real-data claims.
+## Штатный выпуск через Actions
 
-## Standard Actions publication path
+При недоступной авторизации uploads.github.com в cloud CLI используйте `.github/workflows/release.yml` в проверенном main со штатным `GITHUB_TOKEN` job. Новых секретов или credential bindings не нужно. Сам workflow должен быть слит отдельным PR после зелёного CI.
 
-When cloud proxy credentials cannot authorize uploads.github.com, use `.github/workflows/release.yml` on reviewed main with the repository-provided job-scoped GITHUB_TOKEN. No new secret or credential binding is needed. Merge the workflow through its own PR and green CI before dispatch.
+Ручной dispatch получает существующий alpha tag и полный разрешённый commit SHA. Поддерживается формат `v0.1.0a2` → `0.1.0a2`; legacy `v0.1.0a1` → `0.1.0a1` сохраняется. Проверки отвергают branch names, malformed refs, несовпадение версии, изменённый tag и commit вне main ancestry. Checkout pins официальные; credentials не сохраняются. `contents:write` есть только у release job, `GH_TOKEN` доступен только финальному шагу upload/publish. Workflow не создаёт, не reset и не push tags.
 
-The manual dispatch accepts an existing alpha tag and an approved full commit SHA. Validation rejects branch names, malformed refs, version mismatches, changed tags and commits outside main ancestry. Checkout pins are the verified official versions; checkout does not persist credentials. The only write grant is `contents:write` on the release job; GH_TOKEN is exposed only to its final upload/publication step. The workflow does not create/reset/push tags.
+Workflow собирает и тестирует точный tag, нормализует только metadata контейнеров wheel/sdist для воспроизводимых повторов, проверяет установку, создаёт синтетические/документальные assets и SHA256. Нужен существующий prerelease draft с совпадающим target. Существующие assets сравниваются, не clobber; несовпадающие данные или stable release прерывают работу. До публикации скачиваются/проверяются все пять assets; после проверяются state/tag/inventory и они скачиваются/проверяются снова. Повтор для опубликованного совпадающего выпуска только читает данные.
 
-It builds and tests the exact tag, normalizes archive container metadata for reproducible retries, validates installed wheel/sdist, creates synthetic/documentation assets and SHA256SUMS, and verifies existing assets before upload without clobber. An existing prerelease draft with matching target is required. It downloads/checks all five assets before publishing, verifies publication/tag/inventory, then downloads/checks them again. A completed published release with matching assets is a read-only successful retry; unexpected/different assets or a stable release abort.
+После создания тега и draft на проверенном main:
 
-Dispatch: `gh workflow run release.yml --repo mejustbox-byte/azure-opsec-auditor --ref main -f tag=v0.1.0a1 -f expected_commit=698372c2b6f54707561da22e3f9ac52668c2e4a5`. Observe the actual run and its verified published assets before claiming success. The existing v0.1.0a1 tag remains on the product merge commit even though automation lives in a later reviewed main commit.
+```sh
+gh workflow run release.yml --repo mejustbox-byte/azure-opsec-auditor --ref main -f tag=v0.1.0a2 -f expected_commit=FULL_MERGE_SHA
+```
+
+Замените `FULL_MERGE_SHA` точным SHA финального main. Наблюдайте реальный run, а не предполагайте успех по наличию workflow. Реальная лаборатория и незавершённые платформенные проверки: [инструкция](05-lab-and-ci.md).

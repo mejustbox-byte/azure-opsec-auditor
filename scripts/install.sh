@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Reproducible developer setup; no cloud credentials or preserved venv required.
+# Воспроизводимая установка разработки без облачных credentials и сохранённого venv.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
-python3 -c 'import sys; assert sys.version_info >= (3, 12), "Python >=3.12 required"'
+python3 -c 'import sys; assert sys.version_info >= (3, 12), "Требуется Python >=3.12"'
 OPSEC_VENV_DIR="${OPSEC_VENV_DIR:-.venv}"
 python3 -m venv "$OPSEC_VENV_DIR"
 "$OPSEC_VENV_DIR/bin/python" -m pip install --require-hashes --only-binary=:all: -r requirements-build.txt

@@ -1,11 +1,11 @@
-# ADR-001: offline-first Python MVP
+# ADR-001: Python MVP с локальным анализом
 
-Accepted 2026-10-09 for offline MVP only. Python >=3.12, standard-library CLI/schema validator/rule engine/unittest, normalized JSON and JSON/Markdown reports. No cloud SDK, custom OAuth, auth adapter or live transport in the release. The offline binary boundary has no credential or network requirement.
+Принято 2026-10-09 только для локального MVP. Python >=3.12, стандартная библиотека: CLI, валидатор схемы, правила и unittest; нормализованный JSON, отчёты JSON/Markdown. Нет cloud SDK, собственного OAuth, auth adapter или live transport. Пользовательские описания на русском; программные identifiers/keys сохраняются.
 
-Alternatives considered: PowerShell Graph/Az is convenient for administration but less suitable for a small isolated parser/rule artifact; TypeScript adds a second package/tooling ecosystem; Go single-binary distribution is useful but increases initial rule/schema iteration cost. Python favors readable rules and cheap offline tests; runtime installation remains required.
+Альтернативы: PowerShell Graph/Az удобен для администрирования, но сложнее изолировать небольшой parser/rule artifact; TypeScript добавляет другую систему пакетов; Go удобен единым binary, но повышает начальную стоимость изменения правил/схем. Python выбран ради читаемости и дешёвых локальных проверок; установленный runtime всё ещё необходим.
 
-Build-only tools are exact-version hash-locked in requirements-build.txt. Runtime dependency list is empty. JSON Schema is generated from the catalog and committed; the runtime validator supports only the constructs generated here plus semantic checks. Tests enforce artifact/catalog synchronization. Adding a new schema keyword requires extending the validator and tests, or adopting a maintained validator in a separate ADR with a hashed lock.
+Build tools закреплены версиями/хешами в requirements-build.txt. Runtime dependencies отсутствуют. JSON Schema генерируется из каталога и коммитится; валидатор поддерживает только используемые конструкции плюс семантические проверки. Тесты проверяют соответствие артефакта. Новый keyword требует расширения валидатора/тестов либо отдельного ADR о поддерживаемой библиотеке с hashed lock.
 
-This avoids installing a cloud SDK before permissions/API design is validated. Future auth should use a maintained Microsoft library; do not implement OAuth manually. Future SDK vs explicit REST must be decided against method/host/tenant/pagination guards and API drift. Reviewed dependencies and endpoint-specific permission checks are prerequisites, not already completed work.
+Cloud SDK не устанавливается до проверки permissions/API. Для будущей auth нужна поддерживаемая Microsoft библиотека; OAuth самостоятельно не реализуется. SDK vs explicit REST сравниваются по method/host/tenant/pagination guards и API drift. Проверенные зависимости и endpoint permissions — необходимые последующие шаги, а не уже выполненные работы.
 
-Rejected for this MVP: asserting tenant-wide safety from record predicates, auto-remediation, credential acquisition and unverified live collectors. Review this ADR when runtime support, schema complexity, throughput or collection requirements change.
+Исключены из MVP: утверждение о безопасности всего tenant, auto-remediation, acquisition credentials и непроверенные live collectors. ADR пересматривается при изменении runtime support, сложности схемы, производительности или требований сбора.

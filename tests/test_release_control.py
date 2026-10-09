@@ -1,4 +1,5 @@
 """Release control invariants; no real token, API call or upload in unit tests."""
+from contextlib import redirect_stdout
 import gzip
 import hashlib
 import importlib.util
@@ -25,6 +26,21 @@ class ReleaseTests(unittest.TestCase):
         for tag, sha in [('main',COMMIT),('v0.1.0',COMMIT),('v0.1.0a1;bad',COMMIT),('v0.1.0a1','main'),('v0.1.0a1','A'*40)]:
             with self.assertRaises(ValueError): control.validate_request(tag,sha)
 
+    def test_version_asset_names_and_legacy_release(self):
+        self.assertEqual(control.asset_names('0.1.0a2')[0],'azure_opsec_auditor-0.1.0a2-py3-none-any.whl')
+        self.assertEqual(control.asset_names('0.1.0a1')[1],'azure_opsec_auditor-0.1.0a1.tar.gz')
+        control.validate_request('v0.1.0a2',COMMIT)
+        for value in ('../bad','0.1.0','0.1.0a2;bad'):
+            with self.assertRaises(ValueError):control.asset_names(value)
+
+    def test_local_tag_version_mismatch_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source=Path(temp)
+            (source/'pyproject.toml').write_text('[project]\nversion = "0.1.0a2"\n')
+            with patch.object(control,'command',return_value=COMMIT):
+                self.assertEqual(control.verify_local(source,'v0.1.0a2',COMMIT),'0.1.0a2')
+                with self.assertRaises(ValueError):control.verify_local(source,'v0.1.0a1',COMMIT)
+
     def test_annotated_remote_tag_and_changed_commit(self):
         replies=[json.dumps({'object':{'type':'tag','sha':'b'*40}}),json.dumps({'object':{'type':'commit','sha':COMMIT}})]
         with patch.object(control,'gh',side_effect=replies): control.verify_remote_tag('v0.1.0a1',COMMIT)
@@ -45,14 +61,14 @@ class ReleaseTests(unittest.TestCase):
 
     def test_existing_unexpected_asset_never_publishes(self):
         metadata=dict(isDraft=True,isPrerelease=True,targetCommitish=COMMIT,assets=[dict(name='unexpected')],url='synthetic')
-        with patch.object(control,'verify_local'),patch.object(control,'verify_remote_tag'),patch.object(control,'gh',return_value=json.dumps(metadata)) as gh:
-            with self.assertRaises(ValueError): control.publish(Path('.'),Path('.'),'v0.1.0a1',COMMIT)
+        with patch.object(control,'verify_local',return_value='0.1.0a2'),patch.object(control,'verify_remote_tag'),patch.object(control,'gh',return_value=json.dumps(metadata)) as gh:
+            with self.assertRaises(ValueError): control.publish(Path('.'),Path('.'),'v0.1.0a2',COMMIT)
             self.assertEqual(gh.call_count,1)
 
     def test_upload_failure_never_publishes(self):
         metadata=dict(isDraft=True,isPrerelease=True,targetCommitish=COMMIT,assets=[],url='synthetic')
-        with patch.object(control,'verify_local'),patch.object(control,'verify_remote_tag'),patch.object(control,'gh',side_effect=[json.dumps(metadata),RuntimeError('upload failed')]) as gh:
-            with self.assertRaises(RuntimeError): control.publish(Path('.'),Path('.'),'v0.1.0a1',COMMIT)
+        with patch.object(control,'verify_local',return_value='0.1.0a2'),patch.object(control,'verify_remote_tag'),patch.object(control,'gh',side_effect=[json.dumps(metadata),RuntimeError('upload failed')]) as gh:
+            with self.assertRaises(RuntimeError): control.publish(Path('.'),Path('.'),'v0.1.0a2',COMMIT)
             self.assertFalse(any('edit' in call.args for call in gh.call_args_list))
 
     def test_verified_assets_publish_once_and_retry_is_read_only(self):
@@ -73,12 +89,12 @@ class ReleaseTests(unittest.TestCase):
                 if args[:2]==('release','edit'):
                     state['isDraft']=False;return ''
                 raise AssertionError('Unexpected release command')
-            with patch.object(control,'verify_local'),patch.object(control,'verify_remote_tag'),patch.object(control,'gh',side_effect=fake_gh):
-                control.publish(Path('.'),dist,'v0.1.0a1',COMMIT)
+            with redirect_stdout(io.StringIO()),patch.object(control,'verify_local',return_value='0.1.0a2'),patch.object(control,'verify_remote_tag'),patch.object(control,'gh',side_effect=fake_gh):
+                control.publish(Path('.'),dist,'v0.1.0a2',COMMIT)
                 self.assertEqual(len([c for c in calls if c[:2]==('release','upload')]),5)
                 self.assertEqual(len([c for c in calls if c[:2]==('release','edit')]),1)
                 calls.clear()
-                control.publish(Path('.'),dist,'v0.1.0a1',COMMIT)
+                control.publish(Path('.'),dist,'v0.1.0a2',COMMIT)
                 self.assertFalse(any(c[:2] in [('release','upload'),('release','edit')] for c in calls))
 
     def test_archive_normalization_is_reproducible_and_preserves_content(self):
