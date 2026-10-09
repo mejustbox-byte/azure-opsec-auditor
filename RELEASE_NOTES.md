@@ -19,7 +19,7 @@ Extract examples.zip, then from its directory:
 
 Expected exits: good=0, bad=1, unknown/not_run/mixed=2. Historical replay is for examples; current data must meet the freshness budget. Windows uses `.venv\Scripts\` executables.
 
-Local validation: 18 unit and CLI integration tests with all twelve rules, negative parsing/schema cases, FIFO nonblocking-open/descriptor-close regressions, freshness/boundary/partial-source coverage; wheel and sdist installed and exercised outside source tree; repository and release archive signature scan; hash-locked build tools. Remote CI outcome must be verified before publishing; do not infer it from workflow presence.
+Local validation: 18 unit and CLI integration tests with all twelve rules, negative parsing/schema cases, FIFO nonblocking-open/descriptor-close regressions, freshness/boundary/partial-source coverage; wheel and sdist installed and exercised outside source tree; repository and release archive signature scan; hash-locked build tools. Verified remote GitHub Actions at code commit `53b68fda524267f98ea07f4d71bea654981d11b5`: [run 37923866304](https://github.com/mejustbox-byte/azure-opsec-auditor/actions/runs/37923866304) and [run 37923859030](https://github.com/mejustbox-byte/azure-opsec-auditor/actions/runs/37923859030) completed successfully. Linux Python 3.12 and 3.13 ran unit/CLI tests, signature/link checks, build, isolated wheel/sdist installs and synthetic asset checks. The final documentation commit must also have green CI before merge; these are actual remote results, not inferred from workflow presence.
 
 Assets: wheel, sdist, examples.zip, documentation.zip, SHA256SUMS. This is not a PyPI release. Schema and exact rule limitations are included in the documentation.
 
