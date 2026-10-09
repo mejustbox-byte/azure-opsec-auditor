@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "scope": "synthetic-lab",
+  "collected_at": "2026-10-09T00:00:00Z",
+  "sections": {
+    "rbac": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:rbac:01",
+          "privileged": false,
+          "assignment": "permanent",
+          "scope_level": "resource"
+        }
+      ]
+    },
+    "pim": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:pim:01",
+          "plane": "entra",
+          "approval_required": false,
+          "mfa_required": true,
+          "max_activation_hours": 4
+        }
+      ]
+    },
+    "conditional_access": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:conditional_access:01",
+          "state": null,
+          "privileged_target_included": true,
+          "privileged_target_excluded": false
+        }
+      ]
+    },
+    "mfa": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "service_principals": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:service_principals:01",
+          "privileged": true,
+          "owner_count": 1,
+          "credential_expired": false
+        }
+      ]
+    },
+    "oauth": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:oauth:01",
+          "grant_type": "application",
+          "permissions": [
+            "Directory.ReadWrite.All"
+          ]
+        }
+      ]
+    },
+    "identities": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:identities:01",
+          "kind": null,
+          "broad_privilege": false,
+          "issuer_trusted": true,
+          "subject_exact": true,
+          "audience_expected": true
+        }
+      ]
+    },
+    "key_vault": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "storage": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:storage:01",
+          "allow_blob_public_access": false,
+          "container_access": "private"
+        }
+      ]
+    },
+    "network": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:network:01",
+          "direction": "inbound",
+          "action": "allow",
+          "any_source": true,
+          "ports": [
+            22
+          ]
+        }
+      ]
+    },
+    "logging": {
+      "status": "complete",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": [
+        {
+          "id": "synthetic:logging:01",
+          "enabled": null,
+          "destination_configured": true,
+          "retention_days": 90
+        }
+      ]
+    },
+    "recovery": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    }
+  }
+}

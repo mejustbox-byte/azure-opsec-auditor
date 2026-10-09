@@ -1,0 +1,8 @@
+include README.md SECURITY.md RELEASE_NOTES.md requirements-build.txt
+recursive-include docs *.md
+recursive-include fixtures *.json
+recursive-include schemas *.json
+recursive-include scripts *.py *.sh
+recursive-include tests *.py
+recursive-include .github *.yml
+exclude .env
