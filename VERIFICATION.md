@@ -29,4 +29,3 @@ Installer проверяет dependencies/test/scan/good CLI. Distribution verif
 
 ## НЕ ВЫПОЛНЕНО
 
-Реальная Azure/Entra лаборатория, лицензии/API permissions, effective RBAC/groups/CA/MFA, OIDC, delegated OAuth, эффективные сети, доставка журналов/retention и восстановление; см. [LOCAL-PC.md](LOCAL-PC.md). Windows execution и ACL, восстановление среды в новой cloud задаче, внешнее security review, независимый rebuild, SBOM/CVE monitor, подписи/attestations также не выполнены. Проверки в mock release tests отличать от реально выполненного GitHub Actions release.

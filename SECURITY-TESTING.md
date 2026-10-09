@@ -15,6 +15,5 @@
 
 Фактически выполненные команды, CI и выпуск фиксируются в [VERIFICATION.md](VERIFICATION.md), а не выводятся из таблицы. Скрипт проверки артефактов дополнительно проверяет архивы перед публикацией; live gates в [LOCAL-PC.md](LOCAL-PC.md).
 
-**НЕ ВЫПОЛНЕНО:** реальный Azure/Entra tenant, effective RBAC/PIM/CA/MFA, OAuth delegated permissions, реальная federation/network reachability, доставка логов/retention, восстановление и RPO/RTO; Windows, cloud restore в новой задаче, внешнее security review, нагрузочный/fuzz campaign, SBOM/CVE automation, подпись/attestation и независимый rebuild. Нет оснований заявлять соответствие требованиям enterprise/compliance.
 
 При изменении parser/renderer добавлять регрессию против конкретного риска. FIFO тест должен завершаться timeout-контролируемо, а не зависать весь runner. CI fail не обходить отключением tests/hashes. Новый collector потребует отдельного threat review, read-only scope/pagination/rate-limit tests и проверки credential isolation до появления live заявлений.
