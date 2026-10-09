@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-opsec-auditor"
+version = "0.1.0a1"
+description = "Offline read-only Azure and Entra normalized posture auditor"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+classifiers = ["Development Status :: 3 - Alpha", "Programming Language :: Python :: 3", "Operating System :: OS Independent"]
+
+[project.scripts]
+azure-opsec-auditor = "azure_opsec_auditor.cli:main"
+
+[tool.setuptools]
+packages = ["azure_opsec_auditor"]

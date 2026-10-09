@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "scope": "synthetic-lab",
+  "collected_at": "2026-10-09T00:00:00Z",
+  "sections": {
+    "rbac": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "pim": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "conditional_access": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "mfa": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "service_principals": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "oauth": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "identities": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "key_vault": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "storage": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "network": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "logging": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    },
+    "recovery": {
+      "status": "not_run",
+      "source": "synthetic-fixture",
+      "api_version": "normalized-v1",
+      "records": []
+    }
+  }
+}
