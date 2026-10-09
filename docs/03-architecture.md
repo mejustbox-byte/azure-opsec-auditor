@@ -1,16 +1,21 @@
-# Architecture
+# Архитектура
 
-Implemented pipeline: `CLI → bounded UTF-8 JSON loader → schema validator → pure rule engine → JSON/Markdown stdout`. No networking, authentication, background services or Azure SDK. Each catalog entry defines fields, severity, risk predicate, remediation and limitations. `schema.py` generates the checked-in JSON Schema and validates the supported subset using only stdlib.
+Реализованный путь: `CLI → bounded UTF-8 JSON loader → schema validator → pure rules → JSON/Markdown stdout`. Нет сети, auth, фоновых сервисов или Azure SDK. Каталог определяет поля, severity, условие риска, remediation и ограничения. `schema.py` генерирует JSON Schema и валидирует поддерживаемое подмножество стандартной библиотекой.
 
-## Input contract
-Root: `schema_version:1`, `synthetic:boolean`, pseudonymous `scope`, UTC `collected_at`, `sections`. Each named section: `status` (complete/partial/unavailable/not_run), `source`, `api_version`, `records`. A record has unique `id` within its section and the fields in the rule matrix. Nullable or absent rule fields represent unavailable evidence; id is required. Unknown fields are rejected. Unavailable/not_run sections must have no records. Empty complete sections still yield unknown rather than asserting safe coverage.
+## Входной контракт
 
-One snapshot timestamp applies to all included records: an operator must not combine newer and older evidence under a newer timestamp. Use the oldest collection timestamp or split snapshots. Nonblocking open and fstat reject FIFOs/devices/directories before a bounded read and always close the descriptor. JSON Schema covers structural restrictions; runtime additionally enforces unique record IDs, calendar-valid UTC timestamps, no duplicate JSON keys and a freshness budget. The schema artifact is shipped separately in the release.
+Корень: `schema_version:1`, `synthetic:boolean`, псевдоним `scope`, UTC `collected_at`, `sections`. Именованный раздел: `status` (complete/partial/unavailable/not_run), `source`, `api_version`, `records`. Запись содержит уникальный `id` внутри раздела и поля матрицы. `null` или отсутствующее поле означает недоступное evidence; `id` обязателен. Неизвестные поля запрещены. unavailable/not_run не могут содержать записи. Пустой complete даёт `unknown`, а не подтверждение безопасного охвата.
 
-## Findings and coverage
-One finding per record; extra coverage finding for partial/empty source. Missing source gives not_run. Stale available source gives unknown and no record findings. If any required rule field is missing/null, the record is unknown even if another field looks risky; this conservative MVP can suppress known risk when normalization is incomplete. Complete records are evaluated in stable rule/record order. Findings include source/API/rule versions, evidence fields, confidence, severity, rationale, limitations and suggested manual remediation. Evidence is normalized supplied metadata, not raw API responses.
+Одна дата снимка применяется ко всем записям: нельзя объединять старые данные под новой датой. Укажите самое раннее время сбора либо разделите снимки. Неблокирующее открытие и `fstat` отвергают FIFO/devices/directories до bounded read; fd всегда закрывается. JSON Schema описывает структуру; runtime дополнительно проверяет уникальность id, календарные UTC-даты, дубликаты JSON-ключей и возраст.
 
-Exit status 2 for unknown/not_run or input error, otherwise 1 for fail, otherwise 0. `--as-of` pins historical replay; the default is current UTC. Default max age is seven days, configurable 1–365. Future timestamps are invalid. No output file options: the operator controls shell redirection and access permissions.
+## Результаты и охват
 
-## Future live boundary — not implemented
-Graph: directory roles/PIM, CA/auth strengths, service principals, permission grants, federation and registration reports. ARM: resource RBAC/PIM, identities, vaults, storage, NSGs, diagnostics and backup metadata. Plan auth adapter and collection transport separately from the pure rules. No default credential chain or silent tenant switching. Exact endpoint-specific permissions and license behavior require a separate test tenant; do not assume ARM Reader or a single broad Graph grant covers every source. No listKeys or secret-content APIs.
+По одному finding на запись; дополнительный finding по охвату для partial/empty. Отсутствующий источник даёт `not_run`; устаревший доступный — `unknown` без оценки записей. Если обязательное поле отсутствует/null, запись даёт `unknown`, даже если другое поле выглядит рискованным: консервативное правило MVP может скрыть известный риск при неполной нормализации. Полные записи оцениваются в стабильном порядке правил/id.
+
+Результат содержит версии источника/API/правила, evidence, confidence, severity, причину, ограничения и ручную remediation. Evidence — предоставленные нормализованные данные, не сырой API-ответ. Русские описания не меняют ключи JSON, enum и идентификаторы правил.
+
+Код 2 при unknown/not_run или ошибке ввода; иначе 1 при fail, иначе 0. `--as-of` фиксирует историческое время; по умолчанию используется текущий UTC. Допустимый возраст 7 дней, настраивается в пределах 1–365; будущая дата запрещена. CLI не пишет выходные файлы: перенаправлением и permissions управляет оператор.
+
+## Будущий облачный сбор — не реализован
+
+Graph: directory roles/PIM, CA/auth strengths, service principals, grants, federation и registration reports. ARM: RBAC/PIM, resources, identities, vaults, storage, NSGs, diagnostics и backup metadata. Auth adapter и transport проектируются отдельно от правил. Нельзя незаметно переключать tenant через default credential chain. Точные endpoint permissions и licenses проверяются в отдельном tenant; ARM Reader или один Graph grant не считаются универсальным доступом. listKeys/secret-content APIs исключены.

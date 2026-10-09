@@ -1,7 +1,38 @@
-# Security policy
+# Политика безопасности
 
-This alpha is an offline normalized-metadata checker. It is not a live collector, enforcement tool or proof of tenant security. All platform/restore behavior remains unverified.
+Проект анализирует только нормализованные локальные метаданные. Предварительный выпуск не является средством облачного сбора, принудительного применения политик или подтверждения безопасности tenant. Область и границы описаны в [THREAT-MODEL.md](THREAT-MODEL.md); тестовые доказательства — в [SECURITY-TESTING.md](SECURITY-TESTING.md).
 
-Do not post credentials, real tenant exports, identifiers or sensitive findings to public issues/PRs. Use GitHub private vulnerability reporting if enabled by the owner; otherwise arrange a private reporting channel with the owner before sharing sensitive details. Do not assume a public issue is private. Report a minimal synthetic reproduction.
+## Поддерживаемые версии
 
-For development and release: no real credentials, production tenant exports, Azure resource creation, cloud login or mutation. Build dependencies use exact hashes and Actions use reviewed commit pins. Repository scanning is best effort and requires human review; it does not guarantee absence of every secret.
+| Версия | Политика |
+|---|---|
+| 0.1.0a2 / v0.1.0a2 | текущая предварительная ветка; исправления сначала в неё |
+| 0.1.0a1 / v0.1.0a1 | исторический выпуск; тег/assets неизменны, обновляйтесь до новой версии |
+| стабильная версия | не выпущена; гарантий production readiness нет |
+
+Для исправлений выпускается новый тег через проверенный PR/CI; опубликованные файлы не подменяются. Фиксированного SLA ответа, существующего CVE-процесса или независимого security audit проект не обещает.
+
+## Сообщение об уязвимости
+
+1. Подготовьте минимальный синтетический пример, версию/tag/commit/Python, нарушенную границу, ожидаемый и фактический результат. Не прикладывайте реальные credentials, экспорты tenant, UPN, IP или чувствительные отчёты.
+2. Если владелец действительно включил GitHub private vulnerability reporting и интерфейс его предлагает, используйте этот канал. Наличие такого канала здесь не утверждается.
+3. Иначе запросите у владельца безопасный канал через существующее общение или публичную issue **без чувствительных деталей**. До согласования детали уязвимости/данные не публикуйте; адрес электронной почты не выдумывается.
+4. После воспроизведения и исправления согласуйте очищенное описание и обновление версии. Публичная issue/PR не является приватным каналом.
+
+## Доверие и данные
+
+Доверены оператор, ОС, checkout, закреплённые инструменты и GitHub runner. JSON не исполняет код; неизвестные поля и опасные типы отвергаются. Но валидный ложный снимок может скрыть риск, а допустимый identifier может содержать чувствительную информацию. Схема и сигнатурный скан не являются анонимизацией. Scope/complete/trust flags утверждает оператор, живое состояние не проверяется.
+
+Отчёт намеренно включает допустимое evidence и псевдонимы. Храните реальные снимки/отчёты вне публичного checkout, с приватным каталогом/ACL, владельцем и ограниченным сроком; не отправляйте их в CI artifacts или публичные issues. [EVIDENCE.md](EVIDENCE.md) описывает минимизацию, retention и копии. Автоматического удаления/шифрования или защищённой базы аудитор не предоставляет.
+
+## Цепочка поставки и выпуск
+
+Сторонних зависимостей времени выполнения нет. Build tools закреплены версиями/SHA256; Actions — проверенными commit SHA. MIT и отдельные лицензии инструментов перечислены в [SUPPLY-CHAIN.md](SUPPLY-CHAIN.md). Полный LICENSE и русский справочный перевод входят в wheel/sdist и проверяются при сборке.
+
+Обычный CI получает `contents:read`; только release job — `contents:write`. Штатный `GITHUB_TOKEN` доступен лишь финальному шагу загрузки/публикации. Новые credentials не требуются. Проверяются tag/commit/версия, охват assets, SHA256 и скачанные файлы до/после публикации; старые tags/assets не переписываются. Хеши подтверждают согласованность, а не личность издателя. См. [RELEASE-CHECKLIST.md](RELEASE-CHECKLIST.md).
+
+## Невыполненные проверки и инциденты
+
+Реальные Azure/Entra API/auth, permissions/licenses, effective RBAC/CA/OIDC/network, доставка журналов и restore **НЕ ВЫПОЛНЕНЫ**; нужен отдельно разрешённый test tenant. Production аудит и стабильный выпуск из синтетических результатов не следуют.
+
+При утечке остановите публикацию/обработку, ограничьте evidence, сообщите владельцу приватно, отзовите credential через владельца и проверьте историю, artifacts и копии по процедуре инцидента. Одного удаления файла недостаточно. Не пытайтесь исправлять инфраструктуру через этот read-only CLI.

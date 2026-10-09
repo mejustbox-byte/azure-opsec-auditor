@@ -1,18 +1,19 @@
-# Threat model
+# Модель угроз
 
-Assets: local normalized metadata, reports, public code/release integrity and operator trust. Current boundaries: local file → strict parser → pure rules → stdout → operator-controlled destination. CI/build/release are separate trust boundaries. No auth or Graph/ARM transport exists in the MVP.
+Активы: локальные нормализованные метаданные, отчёты, целостность публичного кода/выпуска и доверие к результатам. Текущие границы: локальный файл → строгий парсер → чистые правила → stdout → хранилище оператора. CI/сборка/выпуск образуют отдельные границы. В MVP нет auth или Graph/ARM transport.
 
-| Threat | Implemented control | Test / residual risk |
+| Угроза | Реализованный контроль | Проверка и остаточный риск |
 |---|---|---|
-| Malformed/ambiguous input | strict schema, duplicate-key rejection, type/range/size bounds, UTF-8 only | parser/schema negative tests; local attacker can still supply false valid metadata |
-| Report injection or payload disclosure on error | bounded ASCII identifiers/enumerated fields; errors never include values/unknown keys | error/no-echo and invalid-string tests; valid pseudonyms and permitted metadata are intentionally reported |
-| False assurance from missing data | unknown/not_run coverage, explicit source state, freshness budget, record-only pass semantics | partial/missing/stale tests; operator completeness/normalization assertions cannot be independently verified |
-| Accidental cloud action | no cloud/network/auth dependency or collector | socket-denial unit test; shell/user tooling is outside the auditor |
-| Disclosure in public git/artifacts | synthetic examples, ignored local-data/reports/secrets, repository signature scan and manual diff/artifact inspection | best-effort checks; signature scanning cannot prove absence of every secret or sensitive metadata |
-| Supply chain | zero runtime dependencies; hashed build wheels; pinned Actions; contents:read; no PR secrets | wheel install smoke and CI; trusted tooling/runner can still be compromised |
-| Denial of service | nonblocking open + regular-file-only input, 5 MiB input, 1000 records/source, 50 list items, bounded strings and recursion errors | FIFO subprocess timeout and descriptor-close tests, limits tests; slow regular-file storage or output consumer may still block |
-| Stale evidence / clock manipulation | UTC observation/as-of and bounded age budget | boundary tests; historical replay intentionally trusts operator-selected as-of |
+| Некорректный/неоднозначный ввод | строгая схема, запрет дубликатов, пределы типов/размеров, UTF-8 | отрицательные parser/schema tests; валидные ложные данные всё ещё возможны |
+| Инъекция в отчёт или утечка при ошибке | ограниченные ASCII identifiers и enum; ошибки не включают значения/неизвестные ключи | тесты отсутствия вывода payload; допустимые метаданные намеренно попадают в отчёт |
+| Ложная уверенность при отсутствии данных | `unknown`/`not_run`, статус источника, возраст, только оценка записи | partial/missing/stale tests; полнота нормализации не проверяется независимо |
+| Случайное облачное действие | нет сетевого/auth/cloud collector | запрет socket в тесте; инструменты оператора вне границ аудитора |
+| Утечка в публичный git/выпуск | синтетические примеры, игнорируемые локальные данные, сигнатурный скан и ревью | не доказывает отсутствие каждого секрета или чувствительного поля |
+| Компрометация зависимостей | нет runtime dependencies; hashed build tools, pinned Actions, CI `contents:read` | проверки wheel/sdist; доверенные инструменты/runner могут быть скомпрометированы |
+| Злоупотребление выпуском | только release job `contents:write`; `GITHUB_TOKEN` только в финальном шаге; проверки tag/commit/assets | release control tests; компрометация владельца repo вне модели |
+| Отказ в обслуживании | `O_NONBLOCK` + regular file, 5 MiB, 1000 записей/источник, 50 элементов списка, ограничения строк | FIFO subprocess timeout, закрытие fd, пределы; медленное хранилище/приёмник вывода могут блокировать |
+| Устаревшие данные/подмена часов | UTC collected_at/as-of, допустимый возраст | тесты границ; исторический replay намеренно доверяет выбранному оператором времени |
 
-Future live collectors additionally require token/tenant/audience validation, minimally scoped credentials, verb/host/path allowlists, guarded nextLink/redirects, bounded retries/pages and redacted logs. Those controls are design requirements, not implemented transport guarantees. A compromised snapshot can hide risk despite passing all schema checks.
+Будущему сбору нужны tenant/audience validation, минимальные credentials, verb/host/path allowlists, проверки nextLink/redirect, пределы повторов/страниц и редактирование журналов. Это проектные требования, а не уже реализованные гарантии transport. Ложный снимок может скрывать риск даже после прохождения схемы.
 
-If a credential or real tenant export leaks: stop publication, restrict evidence, revoke the credential via the owner, review history/artifacts and follow the incident procedure. Deleting a file alone is insufficient. This project is an advisory metadata checker, not an enforcement or recovery system.
+При утечке остановите публикацию, ограничьте evidence, отзовите credential через владельца и проверьте историю/артефакты по процедуре инцидента. Одного удаления файла недостаточно. Аудитор — советник по метаданным, а не система принудительного применения политик или восстановления.

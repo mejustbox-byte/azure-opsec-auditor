@@ -1,22 +1,26 @@
-# Requirements / GITHUB-OPSEC Azure and Entra
+# Требования GITHUB-OPSEC / Azure и Entra
 
-Status: implemented offline MVP `0.1.0a1`; no live collector. The broader product direction remains read-only RBAC/PIM, Conditional Access, phishing-resistant MFA, workload/service principals, OAuth, managed identities/OIDC, Key Vault, anonymous storage/network exposure, logging and recovery.
+Статус: реализован MVP локального анализа `0.1.0a2`; средства реального облачного сбора нет. Направление полного продукта: аудит только чтение RBAC/PIM, Conditional Access, фишинг-устойчивой MFA, workload identities/service principals, OAuth permissions, managed identities/OIDC, Key Vault, публичных Storage/сетей, журналирования и восстановления.
 
-## MVP acceptance requirements
-- R1: local CLI with no authentication, network calls, resource creation or mutation. Only stdout/stderr output; input is unchanged.
-- R2: normalized version-1 schema, not a raw Graph/ARM export. Reject unknown properties, duplicates, invalid types/enums, unsafe identifiers, nonfinite numbers, excessive sizes and invalid timestamps without echoing payloads.
-- R3: twelve explicit, narrow rules with good/bad/unknown/not_run synthetic cases. Findings include record identity, evidence, severity, source/API version, observation time, rule version, reason, remediation and limitations.
-- R4: absent source → not_run; unavailable, partial, empty, stale or incomplete required evidence → unknown. Known records from a partial source can have findings, but an additional unknown coverage finding remains.
-- R5: deterministic JSON/Markdown for the same input, `--as-of` and freshness budget. No global secure/insecure badge. A pass proves only that the narrow risk predicate was false for the supplied record.
-- R6: exit 0 complete/no failures, 1 complete/at least one failure, 2 invalid input or incomplete evidence (takes precedence over 1). Errors produce no partial report; valid but incomplete input produces a report.
-- R7: zero runtime dependencies; pinned, hash-verified build dependencies; wheel/sdist and SHA256 manifest. Unit/integration tests and least-privilege CI, no cloud credentials.
+## Приёмка MVP
 
-## Boundary and backlog
-MVP accepts pseudonymous normalized local metadata, including `synthetic:false` for future operator-supplied lab data. It cannot establish provenance, permission correctness, scope completeness, group membership, policy applicability, effective network reachability or restore success. A source status of complete is an operator assertion, not an independently verified fact.
+- R1: локальный CLI без аутентификации, сетевых запросов, создания или изменения ресурсов. Вывод только в stdout/stderr; входной файл не меняется.
+- R2: нормализованная схема версии 1, а не сырой Graph/ARM export. Неизвестные поля, дубликаты, неверные типы/enum, небезопасные идентификаторы, нечисловые числовые константы, превышение размеров и неверные даты отвергаются без вывода значений.
+- R3: 12 узких правил с синтетическими случаями good/bad/unknown/not_run. Результат содержит идентификатор записи, evidence, severity, источник/API, время наблюдения, версию правила, причину, remediation и ограничения.
+- R4: отсутствующий источник → `not_run`; недоступный, частичный, пустой, устаревший источник или недостаточные поля → `unknown`. Известные записи частичного источника оцениваются, но дополнительный `unknown` по охвату сохраняется.
+- R5: JSON/Markdown воспроизводимы при одинаковом вводе, `--as-of` и допустимом возрасте. Нет общей отметки «tenant безопасен». `pass` означает только отсутствие узкого условия риска для переданной записи.
+- R6: код 0 — данные полны, нарушений нет; 1 — данные полны, есть `fail`; 2 — неверный ввод либо неполные данные, с приоритетом над 1. Ошибка ввода не выводит частичный отчёт; валидный неполный снимок выводит отчёт.
+- R7: нет сторонних зависимостей времени выполнения; инструменты сборки закреплены версиями/хешами; wheel/sdist и SHA256. Содержательные unit/integration tests, CI с минимальными permissions, без Azure credentials.
+- R8: документация, пользовательская справка, описания правил/схем и release notes на русском; команды, пути, ключи JSON, идентификаторы и код не переводятся.
 
-Future collectors require explicit tenant/subscription allowlists, minimally scoped auth, Graph/ARM audiences, pagination and Retry-After budgets, safe nextLink host validation, stable API preference and endpoint-specific permissions/licensing. Live integration is NOT VERIFIED. No automatic remediation, secret/key/certificate contents, blob downloads, port scanning, production tenant collection or paid resources in this release.
+## Границы и последующие работы
 
-The intended full product needs group/role inheritance, custom roles, both Entra/Azure PIM planes, effective CA coverage and emergency exclusions, auth registration vs session enforcement, delegated/application permission resolution, identity/resource association, effective ACL/private endpoint evaluation, diagnostic delivery and independent restore testing. These must not be inferred from the MVP's simplified fields.
+MVP принимает локальные нормализованные метаданные с псевдонимами, включая `synthetic:false` для будущей операторской лаборатории. Он не подтверждает происхождение данных, корректность permissions, полноту scope, состав групп, применимость политик, эффективную сетевую достижимость или успешное восстановление. `status:complete` — утверждение оператора, а не независимо проверенный факт.
 
-## Data handling
-Public repository/artifacts: synthetic examples only. Do not place tenant exports, identifiers, UPNs, credentials or sensitive evidence in public git/CI artifacts. Local real normalized snapshots/reports require operator-controlled access and retention outside the checkout. Run offline; do not pipe untrusted snapshots into public issue/report uploads.
+Будущий сбор требует явного списка tenant/subscriptions, минимальных grants, правильных Graph/ARM audiences, pagination/Retry-After, ограничений страниц/повторов и проверки host у nextLink. Реальная интеграция НЕ ПРОВЕРЕНА. Исключены автоматическое исправление, чтение содержимого secrets/keys/certificates, загрузка blobs, сканирование портов, production tenant и платные ресурсы в этой задаче.
+
+Полный продукт должен учитывать группы/наследование/custom roles, Entra и Azure PIM, эффективный охват CA и emergency exclusions, регистрацию методов отдельно от сессий, разрешение delegated/application OAuth grants, привязку identity к ресурсу, effective ACL/private endpoints, доставку журналов и отдельное восстановление. Эти свойства нельзя вывести из упрощённых полей MVP.
+
+## Данные
+
+Публичный git и артефакты содержат только синтетические примеры. Реальные identifiers, UPN, exports, credentials и отчёты храните вне checkout с ограниченными доступом и сроком хранения. Не загружайте реальные снимки в публичные issues или CI artifacts.

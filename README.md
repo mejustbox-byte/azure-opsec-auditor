@@ -1,31 +1,31 @@
 # azure-opsec-auditor
 
-Offline, read-only Azure / Entra posture auditing of **normalized metadata**, not a live Azure collector. Alpha `0.1.0a1` checks RBAC/PIM, Conditional Access, phishing-resistant MFA, service principals, OAuth grants, managed/federated identities, Key Vault, anonymous Storage/network exposure, logging and backup metadata.
+Аудитор состояния безопасности Azure / Entra: анализирует **нормализованные локальные метаданные только чтением**, без подключения к облаку. Предварительная версия пакета `0.1.0a2`, тег выпуска `v0.1.0a2`. Проверки охватывают RBAC/PIM, Conditional Access, фишинг-устойчивую MFA, service principals, OAuth, managed/federated identities, Key Vault, анонимный доступ к Storage, сетевые правила, журналирование и метаданные резервного копирования.
 
-**Azure/Entra platform behavior, live permissions, logging delivery and restore are NOT VERIFIED.** Only synthetic development data has been exercised. A pass applies to the supplied record and narrow rule, never to the whole tenant. No cloud authentication, network requests, resource creation or remediation.
+**Реальные Azure/Entra API, разрешения, доставка журналов и восстановление НЕ ПРОВЕРЕНЫ.** Разработка и проверки используют синтетические данные. `pass` относится к конкретной записи и узкому правилу, а не подтверждает безопасность tenant целиком. Нет облачной аутентификации, сетевого сбора, создания ресурсов или автоматического исправления.
 
-## Install and run
+## Установка и запуск
 
-Requires Python 3.12+. Download `azure_opsec_auditor-0.1.0a1-py3-none-any.whl` and `SHA256SUMS` from the prerelease assets, verify the SHA256 listed for that asset, then:
+Требуется Python 3.12+. Из [предварительного выпуска](https://github.com/mejustbox-byte/azure-opsec-auditor/releases/tag/v0.1.0a2) скачайте `azure_opsec_auditor-0.1.0a2-py3-none-any.whl` и `SHA256SUMS`, проверьте указанный SHA256 файла, затем выполните:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install --no-index --no-deps ./azure_opsec_auditor-0.1.0a1-py3-none-any.whl
+.venv/bin/python -m pip install --no-index --no-deps ./azure_opsec_auditor-0.1.0a2-py3-none-any.whl
 .venv/bin/azure-opsec-auditor --version
 ```
 
-Windows: use `.venv\Scripts\python.exe` and `.venv\Scripts\azure-opsec-auditor.exe`. No PyPI publication is claimed. Alternatively, run from the checkout without installation:
+В Windows используйте `.venv\Scripts\python.exe` и `.venv\Scripts\azure-opsec-auditor.exe`. Публикация в PyPI не выполняется. Из checkout можно запускать без установки:
 
 ```sh
 python3 -m azure_opsec_auditor fixtures/good.json --as-of 2026-10-09T12:00:00Z
 python3 -m azure_opsec_auditor fixtures/bad.json --as-of 2026-10-09T12:00:00Z --format markdown
 ```
 
-The good example exits 0; the bad example exits 1. `fixtures/unknown.json`, `not_run.json` and `mixed.json` exit 2. Historical `--as-of` is for reproducible examples, not a way to certify stale real data. For current data omit it; default max age is 7 days (`--max-age-days` 1–365). Redirect stdout to a secure local file if needed; do not publish real reports.
+Первый пример возвращает код 0; второй — 1. `fixtures/unknown.json`, `not_run.json` и `mixed.json` возвращают 2. Исторический `--as-of` нужен для воспроизводимого примера, а не для подтверждения актуальности устаревших реальных данных. Для текущих снимков опускайте этот аргумент; допустимый возраст по умолчанию 7 дней (`--max-age-days` от 1 до 365). Если перенаправляете stdout в файл, используйте защищённое локальное хранилище и не публикуйте реальные отчёты.
 
-The release `examples.zip` includes all synthetic snapshots and the schema. After extraction, the same commands work using the installed `azure-opsec-auditor` entry point. Inputs must conform to [snapshot schema](schemas/snapshot-v1.json); raw tenant exports are not supported. Unknown fields/malformed input are rejected without echoing supplied values. Source states and missing fields preserve unknown/not_run rather than returning a false pass.
+`examples.zip` содержит синтетические снимки и схему. После распаковки запускайте те же примеры установленной командой `azure-opsec-auditor`. Вход должен соответствовать [схеме снимка](schemas/snapshot-v1.json); сырые экспорты tenant не поддерживаются. Неизвестные поля и некорректный ввод отвергаются без вывода переданных значений. Неполные источники и отсутствующие поля дают `unknown`/`not_run`, а не ложный `pass`.
 
-## Development and verification
+## Разработка и проверка
 
 ```sh
 python3 -m venv .venv
@@ -36,12 +36,45 @@ python3 -m venv .venv
 .venv/bin/python scripts/verify_distribution.py
 ```
 
-Zero runtime dependencies. Build tools are pinned and hash-verified. CI runs the same tests/build/package checks on Linux Python 3.12/3.13. No secrets are needed. See [release procedure](docs/08-release.md) and [managed environment](docs/09-environment.md) for artifacts and remote validation gates.
+Сторонних зависимостей времени выполнения нет. Версии инструментов сборки закреплены, хеши проверяются. CI выполняет тесты, сборку и проверку пакетов на Linux с Python 3.12/3.13 без облачных credentials. В управляемой среде достаточно `bash scripts/install.sh`: команда работает без сохранённого venv. См. [процедуру выпуска](docs/08-release.md) и [настройку среды](docs/09-environment.md).
 
-## Documentation
+## Полный индекс документации
 
-- [Requirements](docs/01-requirements.md), [threat model](docs/02-threat-model.md), [architecture/schema semantics](docs/03-architecture.md)
-- [Exact rule matrix and limitations](docs/04-check-matrix.md), [offline and real lab procedure](docs/05-lab-and-ci.md)
-- [Stack ADR](docs/06-adr-stack.md), [MVP plan](docs/07-mvp-plan.md), [release procedure](docs/08-release.md) and [managed environment](docs/09-environment.md)
+- [Шаблон сообщения об ошибке](.github/ISSUE_TEMPLATE/bug_report.md)
+- [Шаблон PR](.github/PULL_REQUEST_TEMPLATE.md)
+- [Инструкции для последующих циклов разработки](AGENTS.md)
+- [Архитектура локального аудитора](ARCHITECTURE.md)
+- [История изменений](CHANGELOG.md)
+- [Облачная разработка и восстановление среды](CLOUD-DEVELOPMENT.md)
+- [Вклад в проект](CONTRIBUTING.md)
+- [Контракт CLI, JSON и Python library](CORE-CONTRACT.md)
+- [Evidence, отчёты и хранение](EVIDENCE.md)
+- [Установка, проверка и удаление](INSTALL.md)
+- [Лицензия MIT: пояснение и справочный перевод](LICENSE.ru.md)
+- [Локальная лаборатория Azure / Entra](LOCAL-PC.md)
+- [Контроль выпуска 0.1.0a2](RELEASE-CHECKLIST.md)
+- [v0.1.0a2 — локальный аудитор Azure / Entra 0.1.0a2](RELEASE-NOTES.md)
+- [Выпуск и целостность артефактов](RELEASE.md)
+- [Примечания к выпуску](RELEASE_NOTES.md)
+- [План развития и критерии приёмки](ROADMAP.md)
+- [Эксплуатация локального аудитора](RUNBOOK.md)
+- [Проверки безопасности и непроверенные gates](SECURITY-TESTING.md)
+- [Политика безопасности](SECURITY.md)
+- [Зависимости, лицензии и целостность выпуска](SUPPLY-CHAIN.md)
+- [Стек и закреплённые версии](TECH-STACK.md)
+- [Границы доверия и модель угроз](THREAT-MODEL.md)
+- [Протокол проверок](VERIFICATION.md)
+- [Требования GITHUB-OPSEC / Azure и Entra](docs/01-requirements.md)
+- [Модель угроз](docs/02-threat-model.md)
+- [Архитектура](docs/03-architecture.md)
+- [Матрица реализованных правил v1](docs/04-check-matrix.md)
+- [Проверки, CI и реальная лаборатория](docs/05-lab-and-ci.md)
+- [ADR-001: Python MVP с локальным анализом](docs/06-adr-stack.md)
+- [План MVP и условия выпуска](docs/07-mvp-plan.md)
+- [Процедура выпуска](docs/08-release.md)
+- [Управляемая среда разработки](docs/09-environment.md)
+- [Полнота документации и сопоставление](docs/10-documentation-coverage.md)
+- [Стандартный текст лицензии MIT](LICENSE)
+- [Машиночитаемая схема снимка](schemas/snapshot-v1.json)
 
-Never commit real secrets, tenant exports, UPNs or sensitive reports. Use `local-data/` outside public git or a separate protected directory; `.gitignore` is not a security boundary. No paid resources or real credentials are used by development/CI. See [security policy](SECURITY.md).
+Не добавляйте реальные секреты, экспорты tenant, UPN или чувствительные отчёты в публичный git. Храните реальные снимки вне checkout либо в отдельном защищённом каталоге; `.gitignore` не является границей безопасности. Разработка и CI не используют реальные Azure credentials или платные ресурсы. Старый выпуск `0.1.0a1` сохраняется с неизменным тегом и артефактами; перевод распространяется новым выпуском.

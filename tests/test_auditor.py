@@ -74,8 +74,8 @@ class RuleTests(unittest.TestCase):
         data=fixture('mixed'); original=copy.deepcopy(data)
         first=audit(data,as_of=AS_OF); second=audit(data,as_of=AS_OF)
         self.assertEqual(first,second); self.assertEqual(data,original)
-        self.assertIn('NOT VERIFIED',markdown(first))
-        self.assertIn('Remediation:',markdown(first))
+        self.assertIn('НЕ ПРОВЕРЕНО',markdown(first))
+        self.assertIn('Рекомендация:',markdown(first))
         self.assertEqual(first['summary'],{'pass':3,'fail':3,'unknown':3,'not_run':3})
 
     def test_rule_boundaries(self):
@@ -167,15 +167,18 @@ class ValidationTests(unittest.TestCase):
                 cwd=ROOT, capture_output=True, text=True, timeout=3)
             self.assertEqual(result.returncode, 2)
             self.assertEqual(result.stdout, '')
-            self.assertIn('regular file', result.stderr)
+            self.assertIn('обычным файлом', result.stderr)
             self.assertNotIn('Traceback', result.stderr)
 
     def test_nonregular_rejection_closes_descriptor(self):
-        with tempfile.TemporaryDirectory() as temp:
-            with patch('azure_opsec_auditor.schema.os.close', wraps=os.close) as close:
-                with self.assertRaises(InputError):
-                    load(temp)
-                self.assertEqual(close.call_count, 1)
+        read_fd, write_fd = os.pipe()
+        try:
+            with patch('azure_opsec_auditor.schema.os.open',return_value=read_fd), patch('azure_opsec_auditor.schema.os.close',wraps=os.close) as close:
+                with self.assertRaises(InputError):load('synthetic-pipe')
+                self.assertEqual(close.call_count,1)
+            with self.assertRaises(OSError):os.fstat(read_fd)
+        finally:
+            os.close(write_fd)
 
     def test_strict_limits(self):
         data=fixture(); data['sections']['storage']['records']=[dict(id=f'synthetic:{n}') for n in range(1001)]
@@ -195,7 +198,7 @@ class CLITests(unittest.TestCase):
             self.assertEqual(json.loads(p.stdout)['exit_code'],code)
             self.assertEqual(p.stderr,'')
         p=self.run_cli(ROOT/'fixtures/mixed.json','--as-of',AS_OF,'--format','markdown')
-        self.assertEqual(p.returncode,2); self.assertIn('# Azure',p.stdout)
+        self.assertEqual(p.returncode,2); self.assertIn('# Локальный',p.stdout)
 
     def test_error_no_traceback_or_payload(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -206,6 +209,28 @@ class CLITests(unittest.TestCase):
             self.assertNotIn('Traceback',p.stderr)
         p=self.run_cli(ROOT/'fixtures/good.json','--as-of','invalid')
         self.assertEqual(p.returncode,2); self.assertNotIn('Traceback',p.stderr)
+
+    def test_russian_help_and_input_error(self):
+        result=self.run_cli('--help')
+        self.assertIn('Использование:',result.stdout)
+        self.assertIn('Позиционные параметры',result.stdout)
+        self.assertIn('формат отчёта',result.stdout)
+        self.assertNotIn('usage:',result.stdout)
+        result=self.run_cli(ROOT/'fixtures/good.json','--max-age-days','invalid')
+        self.assertEqual(result.returncode,2)
+        self.assertIn('Ошибка параметров',result.stderr)
+
+    def test_russian_report_and_schema_descriptions(self):
+        report=audit(fixture('bad'),as_of=AS_OF)
+        self.assertIn('Рекомендация:',markdown(report))
+        for finding in report['findings']:
+            for key in ('title','remediation','limitations','reason'):
+                self.assertRegex(finding[key],r'[А-Яа-я]')
+        self.assertRegex(SCHEMA['title'],r'[А-Яа-я]')
+        for rule in RULES:
+            properties=SCHEMA['properties']['sections']['properties'][rule.section]['properties']['records']['items']['properties']
+            for name in rule.fields:
+                self.assertRegex(properties[name]['description'],r'[А-Яа-я]')
 
     def test_help_version(self):
         for flag in ('--help','--version'):

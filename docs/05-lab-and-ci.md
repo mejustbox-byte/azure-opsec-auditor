@@ -1,18 +1,22 @@
-# Verification, CI and real laboratory procedure
+# Проверки, CI и реальная лаборатория
 
-## Offline developer checks
-Python 3.12+: `python -m unittest discover -s tests -v`; `python scripts/check_repository.py`; build with hashed requirements and `python -m build --no-isolation`. `scripts/verify_distribution.py` installs both wheel and sdist into temporary environments and invokes the installed CLI from outside the source tree. There are no runtime dependencies or Azure credentials. Fixtures describe normalized data, not raw Graph/ARM responses.
+## Локальные проверки
 
-CI workflow `.github/workflows/ci.yml`: push/pull_request, Linux Python 3.12/3.13 matrix, pinned checkout/setup-python commits, contents:read, bounded timeout, hashed build tools, tests, source scan and installed-package checks. Official tag verification: `actions/checkout` v4.3.1 → `34e114876b0b11c390a56381ad16ebd13914f8d5`; `actions/setup-python` v5.6.0 → `a26af69be951a213d495a4c3e4e4022e16d87065`. Verified with read-only `git ls-remote` against the official repositories. No Azure login, PR secrets, live jobs or tenant artifacts. Workflow presence is not evidence that a remote run succeeded; remote results are reported separately in the release procedure. Branch protection is an owner decision and is not changed automatically.
+Python 3.12+: `python -m unittest discover -s tests -v`, `python scripts/check_repository.py`, сборка с hashed requirements через `python -m build --no-isolation`. `scripts/verify_distribution.py` устанавливает wheel и sdist во временные venv и запускает установленный CLI вне source tree. Нет runtime dependencies или Azure credentials. Fixtures представляют нормализованные данные, а не настоящие ответы Graph/ARM.
 
-## Real lab — NOT VERIFIED / separate authorization required
-This version has no live collector. Do not expect the CLI to connect to Azure. Use a separately authorized, disposable test tenant/subscription owned by the operator, with approved budget, licenses and cleanup plan. This task creates no resources and uses no real credentials.
+`.github/workflows/ci.yml`: push/pull_request, Linux Python 3.12/3.13, pinned checkout/setup-python, `contents:read`, timeout, hashed build tools, тесты, скан и проверки пакетов. Проверенные официальные tags: `actions/checkout` v4.3.1 → `34e114876b0b11c390a56381ad16ebd13914f8d5`; `actions/setup-python` v5.6.0 → `a26af69be951a213d495a4c3e4e4022e16d87065`. Проверка выполнена read-only `git ls-remote` в официальных repo.
 
-1. Owner records tenant/subscription allowlists and scope; protect against CA lockout using tested emergency access. Determine Entra/PIM licensing and exact stable Graph/ARM endpoint permissions from current Microsoft documentation. Do not grant broad write permissions to an auditor.
-2. Provision benign test identities, roles, policy variants, empty vault/storage/network resources and logging/backup examples with a separate owner-operated provisioning tool. No production accounts/data; do not expose populated storage or sensitive services. Provisioning is outside this auditor.
-3. An independently reviewed read-only collection/normalization procedure records endpoint/API, source status, oldest observation time, pagination completeness and missing grants. Map fields in the rule matrix explicitly: privilege, effective CA assertions, resolved OAuth names and OIDC trust flags are not derived by the CLI. Use pseudonymous identifiers and `synthetic:false`; never commit raw exports or reports.
-4. Compare offline findings with expected configuration, separately verify group inheritance/custom roles, both PIM planes, CA exclusions/strengths, permission resolution, provider-specific OIDC trust, effective vault/storage/network access and telemetry delivery. Record unsupported endpoints/licensing as unknown; never fabricate missing values.
-5. Restore testing is a separate owner-approved drill with separate permissions and benign backup data. A successful metadata result is not restore evidence. Record success/failure and cleanup separately.
-6. Securely retain only necessary evidence outside git under a defined TTL/access policy; owner removes lab resources. If collection, delivery, restore or cleanup was not performed, state NOT VERIFIED.
+Нет Azure login, PR secrets, live jobs или tenant artifacts. Наличие workflow не доказывает успешный удалённый запуск: фактические ссылки фиксируются отдельно в release notes. Branch protection настраивает владелец; автоматически она не меняется. Release control отдельно проверяет immutable tag, существующие assets и SHA256; эти тесты не являются tenant-проверками.
 
-Remaining platform gates: no live auth/API requests executed; permissions/license matrix unvalidated; no live collector/pagination tests; no effective policy/network verification; no diagnostic delivery test; no restore or cleanup evidence. A prerelease communicates these limitations.
+## Реальная лаборатория — НЕ ПРОВЕРЕНО
+
+В этой версии нет live collector. CLI не подключается к Azure. Нужен отдельно разрешённый disposable test tenant/subscription, владелец, согласованные бюджет, licenses и cleanup plan. Эта задача не создаёт ресурсов и не использует реальные Azure credentials.
+
+1. Владелец фиксирует tenant/subscription allowlists и scope, защищает от CA lockout проверенным emergency access. По актуальной Microsoft документации определяет точные stable Graph/ARM permissions и Entra/PIM licensing. Аудитору не назначают write grants.
+2. Отдельный операторский инструмент создаёт безопасные test identities/roles/policies и пустые vault/storage/network resources, logging/backup примеры. Никаких production данных; нельзя публиковать populated storage или чувствительные сервисы. Provisioning не входит в аудитор.
+3. Независимо проверенная read-only процедура сбора/нормализации фиксирует endpoint/API, source status, самое раннее время, pagination completeness и отсутствующие grants. Поля матрицы сопоставляются явно: privilege, effective CA assertions, OAuth names и OIDC flags CLI не вычисляет. Псевдонимы и `synthetic:false`; сырые exports/reports не коммитятся.
+4. Сравните findings с ожидаемой конфигурацией. Отдельно проверьте группы/наследование/custom roles, обе PIM planes, CA exclusions/strengths, OAuth resolution, provider-specific OIDC, effective vault/storage/network access и доставку telemetry. Недоступные API/licenses дают `unknown`; отсутствующие значения не выдумываются.
+5. Restore — отдельно разрешённое упражнение владельца с отдельными permissions и безопасными backup data. Успешные метаданные не являются evidence восстановления. Результаты/cleanup фиксируются отдельно.
+6. Evidence хранится защищённо вне git с TTL/access policy. Ресурсы удаляет владелец. Невыполненные сбор, доставка, restore или cleanup отмечаются НЕ ПРОВЕРЕНО.
+
+Остаются непроверенными: auth/API, permissions/licenses, live collector/pagination, effective policy/network, доставка журналов, restore и cleanup. Предварительный выпуск явно сообщает эти ограничения.
