@@ -36,12 +36,12 @@ python3 -m venv .venv
 .venv/bin/python scripts/verify_distribution.py
 ```
 
-Zero runtime dependencies. Build tools are pinned and hash-verified. CI runs the same tests/build/package checks on Linux Python 3.12/3.13. No secrets are needed. See [release procedure](docs/08-release.md) for artifacts and remote validation gates.
+Zero runtime dependencies. Build tools are pinned and hash-verified. CI runs the same tests/build/package checks on Linux Python 3.12/3.13. No secrets are needed. See [release procedure](docs/08-release.md) and [managed environment](docs/09-environment.md) for artifacts and remote validation gates.
 
 ## Documentation
 
 - [Requirements](docs/01-requirements.md), [threat model](docs/02-threat-model.md), [architecture/schema semantics](docs/03-architecture.md)
 - [Exact rule matrix and limitations](docs/04-check-matrix.md), [offline and real lab procedure](docs/05-lab-and-ci.md)
-- [Stack ADR](docs/06-adr-stack.md), [MVP plan](docs/07-mvp-plan.md), [release procedure](docs/08-release.md)
+- [Stack ADR](docs/06-adr-stack.md), [MVP plan](docs/07-mvp-plan.md), [release procedure](docs/08-release.md) and [managed environment](docs/09-environment.md)
 
 Never commit real secrets, tenant exports, UPNs or sensitive reports. Use `local-data/` outside public git or a separate protected directory; `.gitignore` is not a security boundary. No paid resources or real credentials are used by development/CI. See [security policy](SECURITY.md).

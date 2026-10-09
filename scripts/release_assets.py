@@ -34,7 +34,7 @@ def inspect(path):
 def main():
     DIST.mkdir(exist_ok=True)
     archive('examples.zip', [*ROOT.glob('fixtures/*.json'),*ROOT.glob('schemas/*.json')])
-    archive('documentation.zip', [ROOT/'README.md',ROOT/'SECURITY.md',*ROOT.glob('docs/*.md'),*ROOT.glob('schemas/*.json')])
+    archive('documentation.zip', [ROOT/'README.md',ROOT/'SECURITY.md',ROOT/'RELEASE_NOTES.md',*ROOT.glob('docs/*.md'),*ROOT.glob('schemas/*.json')])
     names = ['azure_opsec_auditor-0.1.0a1-py3-none-any.whl',
              'azure_opsec_auditor-0.1.0a1.tar.gz','documentation.zip','examples.zip']
     lines=[]
