@@ -1,7 +1,8 @@
 """JSON Schema artifact and dependency-free validator for its restricted subset."""
 from datetime import datetime, timezone
 import json
-from pathlib import Path
+import os
+import stat
 import re
 from .catalog import RULES
 
@@ -124,9 +125,15 @@ def reject_constant(_):
 
 
 def load(path):
+    fd = None
     try:
-        # Bounded read also applies to FIFOs/streams; files are never modified.
-        with Path(path).open('rb') as stream:
+        # Nonblocking open avoids hanging on a FIFO before we can inspect its type.
+        flags = os.O_RDONLY | getattr(os, 'O_NONBLOCK', 0) | getattr(os, 'O_BINARY', 0)
+        fd = os.open(os.fspath(path), flags)
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise InputError('Snapshot input must be a regular file')
+        with os.fdopen(fd, 'rb') as stream:
+            fd = None  # The stream now owns and closes the descriptor.
             payload = stream.read(MAX_BYTES + 1)
         if len(payload) > MAX_BYTES:
             raise InputError('Input exceeds 5 MiB limit')
@@ -137,3 +144,6 @@ def load(path):
         raise
     except (OSError, UnicodeError, ValueError, RecursionError):
         raise InputError('Cannot read a valid UTF-8 JSON snapshot') from None
+    finally:
+        if fd is not None:
+            os.close(fd)

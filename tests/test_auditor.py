@@ -1,5 +1,6 @@
 import copy
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -154,6 +155,27 @@ class ValidationTests(unittest.TestCase):
                 path.write_bytes(raw)
                 with self.assertRaises(InputError): load(path)
             with self.assertRaises(InputError): load(Path(temp)/'missing')
+
+    @unittest.skipUnless(hasattr(os, 'mkfifo'), 'POSIX FIFO regression')
+    def test_fifo_rejected_without_waiting_for_writer(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp)/'snapshot-fifo'
+            os.mkfifo(path)
+            # A blocking open with no writer must fail this test's hard deadline.
+            result = subprocess.run(
+                [sys.executable, '-m', 'azure_opsec_auditor', str(path)],
+                cwd=ROOT, capture_output=True, text=True, timeout=3)
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(result.stdout, '')
+            self.assertIn('regular file', result.stderr)
+            self.assertNotIn('Traceback', result.stderr)
+
+    def test_nonregular_rejection_closes_descriptor(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with patch('azure_opsec_auditor.schema.os.close', wraps=os.close) as close:
+                with self.assertRaises(InputError):
+                    load(temp)
+                self.assertEqual(close.call_count, 1)
 
     def test_strict_limits(self):
         data=fixture(); data['sections']['storage']['records']=[dict(id=f'synthetic:{n}') for n in range(1001)]
